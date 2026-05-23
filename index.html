@@ -60,69 +60,97 @@
     <div class="hint" id="hint"></div>
   </main>
 
-  <script>
-    const qs = new URLSearchParams(location.search);
-    const dateStr = qs.get("date");
+ <script>
+  const qs = new URLSearchParams(location.search);
+  const dateStr = qs.get("date");
 
-    const daysEl = document.getElementById("days");
-    const dateEl = document.getElementById("date");
-    const weeksEl = document.getElementById("weeks");
-    const monthsEl = document.getElementById("months");
-    const yearsEl = document.getElementById("years");
-    const hintEl = document.getElementById("hint");
+  const daysEl = document.getElementById("days");
+  const dateEl = document.getElementById("date");
+  const weeksEl = document.getElementById("weeks");
+  const monthsEl = document.getElementById("months");
+  const yearsEl = document.getElementById("years");
+  const hintEl = document.getElementById("hint");
 
-    if (!dateStr) {
-      hintEl.textContent =
-        "Ajoute ?date=AAAA-MM-JJ à l’URL";
-    } else {
-      const start = new Date(dateStr + "T00:00:00");
-      const today = new Date();
+  function mondayOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // dimanche=0
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
 
-      today.setHours(0,0,0,0);
+  if (!dateStr) {
+    hintEl.textContent =
+      "Ajoute ?date=AAAA-MM-JJ à l’URL";
+  } else {
+    const start = new Date(dateStr + "T00:00:00");
+    const today = new Date();
 
-      const diffMs = today - start;
-      const totalDays =
-        Math.floor(diffMs / 86400000);
+    start.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
 
-      const weeks = Math.floor(totalDays / 7);
-      const remDaysWeeks = totalDays % 7;
+    // Jours totaux
+    const totalDays =
+      Math.floor((today - start) / 86400000);
 
-      // mois/années exacts calendrier
-      let years = today.getFullYear() - start.getFullYear();
-      let months = today.getMonth() - start.getMonth();
-      let days = today.getDate() - start.getDate();
+    // Semaines calendaires (lundi → dimanche)
+    const mondayStart = mondayOfWeek(start);
+    const mondayToday = mondayOfWeek(today);
 
-      if (days < 0) {
-        months--;
-        const prevMonth =
-          new Date(today.getFullYear(),
-                   today.getMonth(), 0).getDate();
-        days += prevMonth;
-      }
+    const calendarWeeks =
+      Math.floor((mondayToday - mondayStart) / 86400000 / 7);
 
-      if (months < 0) {
-        years--;
-        months += 12;
-      }
+    const remainingDays =
+      Math.floor((today - mondayToday) / 86400000);
 
-      const totalMonths =
-        years * 12 + months;
+    // Mois / années exacts
+    let years =
+      today.getFullYear() - start.getFullYear();
 
-      daysEl.textContent =
-        `${totalDays} jours`;
+    let months =
+      today.getMonth() - start.getMonth();
 
-      dateEl.textContent =
-        `depuis le ${start.toLocaleDateString("fr-FR")}`;
+    let days =
+      today.getDate() - start.getDate();
 
-      weeksEl.textContent =
-        `${weeks} semaines et ${remDaysWeeks} jours`;
+    if (days < 0) {
+      months--;
 
-      monthsEl.textContent =
-        `${totalMonths} mois et ${days} jours`;
+      const prevMonthDays =
+        new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          0
+        ).getDate();
 
-      yearsEl.textContent =
-        `${years} ans, ${months} mois et ${days} jours`;
+      days += prevMonthDays;
     }
-  </script>
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const totalMonths =
+      years * 12 + months;
+
+    // Affichage
+    daysEl.textContent =
+      `${totalDays} jours`;
+
+    dateEl.textContent =
+      `depuis le ${start.toLocaleDateString("fr-FR")}`;
+
+    weeksEl.textContent =
+      `${calendarWeeks} semaine${calendarWeeks > 1 ? "s" : ""} + ${remainingDays} jour${remainingDays > 1 ? "s" : ""}`;
+
+    monthsEl.textContent =
+      `${totalMonths} mois + ${days} jours`;
+
+    yearsEl.textContent =
+      `${years} an${years > 1 ? "s" : ""}, ${months} mois et ${days} jours`;
+  }
+</script>
 </body>
 </html>
