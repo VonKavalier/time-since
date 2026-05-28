@@ -143,10 +143,10 @@
       `depuis le ${start.toLocaleDateString("fr-FR")}`;
 
     weeksEl.textContent =
-      `${calendarWeeks} semaine${calendarWeeks > 1 ? "s" : ""} + ${remainingDays} jour${remainingDays > 1 ? "s" : ""}`;
+      `${calendarWeeks} semaine${calendarWeeks > 1 ? "s" : ""} et ${remainingDays} jour${remainingDays > 1 ? "s" : ""}`;
 
     monthsEl.textContent =
-      `${totalMonths} mois + ${days} jours`;
+      `${totalMonths} mois et ${days} jours`;
 
     yearsEl.textContent =
       `${years} an${years > 1 ? "s" : ""}, ${months} mois et ${days} jours`;
