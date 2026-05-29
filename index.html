@@ -23,7 +23,7 @@
       border-radius: 16px;
       padding: 2rem;
       box-shadow: 0 8px 30px rgba(0,0,0,.08);
-      max-width: 600px;
+      max-width: 800px;
       width: 100%;
     }
 
@@ -38,119 +38,265 @@
       font-size: 1.1rem;
     }
 
+    hr {
+      border: 0;
+      border-top: 1px solid #eee;
+      margin: 1.5rem 0;
+    }
+
+    #days {
+      transition: .2s;
+    }
+
     .line {
-      font-size: 1.3rem;
-      margin: .8rem 0;
+      font-size: 1.2rem;
+      margin: .7rem 0;
     }
 
     .hint {
       color: #888;
     }
+
+    #elapsedMain {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .45rem .7rem;
+
+      font-size: clamp(2rem, 6vw, 3.6rem);
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #elapsedMain span {
+      white-space: nowrap;
+      padding: .15em .45em;
+    }
+
+    #elapsedClock {
+      font-size: clamp(1.2rem, 3.2vw, 2rem);
+      font-weight: 600;
+      margin: .9rem 0 1.2rem;
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1 id="days">—</h1>
-    <div class="date" id="date"></div>
+    <main class="card">
+      <h1 id="elapsedMain">—</h1>
+      <div class="hint" id="hint"></div>
+      <div class="date" id="date"></div>
 
-    <div class="line" id="weeks"></div>
-    <div class="line" id="months"></div>
-    <div class="line" id="years"></div>
+      <div class="line" id="elapsedClock"></div>
 
-    <div class="hint" id="hint"></div>
-  </main>
+      <hr>
 
- <script>
-  const qs = new URLSearchParams(location.search);
-  const dateStr = qs.get("date");
+      <div class="line" id="days"></div>
+      <div class="line" id="weeks"></div>
+      <div class="line" id="months"></div>
+      <div class="line" id="hours"></div>
+      <div class="line" id="minutes"></div>
+      <div class="line" id="seconds"></div>
+    </main>
 
-  const daysEl = document.getElementById("days");
-  const dateEl = document.getElementById("date");
-  const weeksEl = document.getElementById("weeks");
-  const monthsEl = document.getElementById("months");
-  const yearsEl = document.getElementById("years");
-  const hintEl = document.getElementById("hint");
+    <script>
+    const qs = new URLSearchParams(location.search);
+    const dateStr = qs.get("date");
 
-  function mondayOfWeek(date) {
-    const d = new Date(date);
-    const day = d.getDay(); // dimanche=0
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
-    d.setHours(0,0,0,0);
-    return d;
-  }
+    const elapsedMain =
+      document.getElementById("elapsedMain");
 
-  if (!dateStr) {
-    hintEl.textContent =
-      "Ajoute ?date=AAAA-MM-JJ à l’URL";
-  } else {
-    const start = new Date(dateStr + "T00:00:00");
-    const today = new Date();
+    const elapsedClock =
+      document.getElementById("elapsedClock");
 
-    start.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
+    const dateEl =
+      document.getElementById("date");
 
-    // Jours totaux
-    const totalDays =
-      Math.floor((today - start) / 86400000);
+    const daysEl =
+      document.getElementById("days");
 
-    // Semaines calendaires (lundi → dimanche)
-    const mondayStart = mondayOfWeek(start);
-    const mondayToday = mondayOfWeek(today);
+    const weeksEl =
+      document.getElementById("weeks");
 
-    const calendarWeeks =
-      Math.floor((mondayToday - mondayStart) / 86400000 / 7);
+    const monthsEl =
+      document.getElementById("months");
 
-    const remainingDays =
-      Math.floor((today - mondayToday) / 86400000);
+    const hoursEl =
+      document.getElementById("hours");
 
-    // Mois / années exacts
-    let years =
-      today.getFullYear() - start.getFullYear();
+    const minutesEl =
+      document.getElementById("minutes");
 
-    let months =
-      today.getMonth() - start.getMonth();
+    const secondsEl =
+      document.getElementById("seconds");
 
-    let days =
-      today.getDate() - start.getDate();
+    const hintEl =
+      document.getElementById("hint");
 
-    if (days < 0) {
-      months--;
+    function mondayOfWeek(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff =
+        day === 0 ? -6 : 1 - day;
 
-      const prevMonthDays =
-        new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          0
-        ).getDate();
-
-      days += prevMonthDays;
+      d.setDate(d.getDate() + diff);
+      d.setHours(0,0,0,0);
+      return d;
     }
 
-    if (months < 0) {
-      years--;
-      months += 12;
+    function diffParts(start, end) {
+      let years =
+        end.getFullYear() -
+        start.getFullYear();
+
+      let months =
+        end.getMonth() -
+        start.getMonth();
+
+      let days =
+        end.getDate() -
+        start.getDate();
+
+      let hours =
+        end.getHours() -
+        start.getHours();
+
+      let minutes =
+        end.getMinutes() -
+        start.getMinutes();
+
+      let seconds =
+        end.getSeconds() -
+        start.getSeconds();
+
+      if (seconds < 0) {
+        seconds += 60;
+        minutes--;
+      }
+
+      if (minutes < 0) {
+        minutes += 60;
+        hours--;
+      }
+
+      if (hours < 0) {
+        hours += 24;
+        days--;
+      }
+
+      if (days < 0) {
+        months--;
+
+        const prevMonthDays =
+          new Date(
+            end.getFullYear(),
+            end.getMonth(),
+            0
+          ).getDate();
+
+        days += prevMonthDays;
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      return {
+        years,
+        months,
+        days,
+        hours,
+        minutes,
+        seconds
+      };
     }
 
-    const totalMonths =
-      years * 12 + months;
+    if (!dateStr) {
+      hintEl.textContent =
+        "Ajoute ?date=AAAA-MM-JJ";
+    } else {
 
-    // Affichage
-    daysEl.textContent =
-      `${totalDays} jours`;
+      const start =
+        new Date(dateStr + "T00:00:00");
 
-    dateEl.textContent =
-      `depuis le ${start.toLocaleDateString("fr-FR")}`;
+      function render() {
+        const now = new Date();
 
-    weeksEl.textContent =
-      `${calendarWeeks} semaine${calendarWeeks > 1 ? "s" : ""} et ${remainingDays} jour${remainingDays > 1 ? "s" : ""}`;
+        const diffMs = now - start;
 
-    monthsEl.textContent =
-      `${totalMonths} mois et ${days} jours`;
+        const totalDays =
+          Math.floor(diffMs / 86400000);
 
-    yearsEl.textContent =
-      `${years} an${years > 1 ? "s" : ""}, ${months} mois et ${days} jours`;
-  }
-</script>
+        const totalHours =
+          Math.floor(diffMs / 3600000);
+
+        const totalMinutes =
+          Math.floor(diffMs / 60000);
+
+        const totalSeconds =
+          Math.floor(diffMs / 1000);
+
+        const mondayStart =
+          mondayOfWeek(start);
+
+        const mondayToday =
+          mondayOfWeek(now);
+
+        const calendarWeeks =
+          Math.floor(
+            (mondayToday - mondayStart) /
+            86400000 / 7
+          );
+
+        const remainingDays =
+          Math.floor(
+            (now - mondayToday) /
+            86400000
+          );
+
+        const parts =
+          diffParts(start, now);
+
+        const totalMonths =
+          parts.years * 12 +
+          parts.months;
+
+       elapsedMain.innerHTML =
+      `<span>${parts.years} an${parts.years > 1 ? "s" : ""}</span>
+       <span>${parts.months} mois</span>
+       <span>${parts.days} jour${parts.days > 1 ? "s" : ""}</span>`;
+
+        elapsedClock.textContent =
+          `${String(parts.hours).padStart(2,"0")}h `
+          + `${String(parts.minutes).padStart(2,"0")}m `
+          + `${String(parts.seconds).padStart(2,"0")}s`;
+
+        dateEl.textContent =
+          `depuis le ${start.toLocaleDateString("fr-FR")}`;
+
+        daysEl.textContent =
+          `${totalDays.toLocaleString("fr-FR")} jours`;
+
+        weeksEl.textContent =
+          `${calendarWeeks} semaines et ${remainingDays} jours`;
+
+        monthsEl.textContent =
+          `${totalMonths} mois`;
+
+        hoursEl.textContent =
+          `${totalHours.toLocaleString("fr-FR")} heures`;
+
+        minutesEl.textContent =
+          `${totalMinutes.toLocaleString("fr-FR")} minutes`;
+
+        secondsEl.textContent =
+          `${totalSeconds.toLocaleString("fr-FR")} secondes`;
+      }
+
+      render();
+      setInterval(render, 1000);
+    }
+    </script>
 </body>
 </html>
